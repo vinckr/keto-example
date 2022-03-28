@@ -1,97 +1,11 @@
-import Reveal from 'reveal.js'
-import Markdown from 'reveal.js/plugin/markdown/markdown.esm.js'
-import Notes from 'reveal.js/plugin/notes/notes.esm.js'
-import { RemoteFile } from '../shared'
-import renderSlide from './slides'
+
 import Prism from 'prismjs'
-import PrismPlugin from './prismPlugin'
-import MonacoPlugin from './monacoPlugin'
 
 import './index.css'
 
-const persistentState: {
-  indexv: number
-  indexh: number
-  showNotes: boolean
-} = {
-  indexv: 0,
-  indexh: 0,
-  showNotes: true
-}
-
-let reveal: Reveal
-
-const render = (slides: Array<RemoteFile>) => {
-  const slidesDiv = document.createElement('div')
-  slidesDiv.className = 'slides'
-  const revealDiv = document.createElement('div')
-  revealDiv.className = 'reveal'
-  revealDiv.appendChild(slidesDiv)
-
-  slides.forEach((slide) => {
-    slidesDiv.appendChild(renderSlide(slide))
-  })
-
-  document.querySelector('body #render-reveal-here').replaceChildren(revealDiv)
-
-  reveal = new Reveal({
-    plugins: [Markdown, Notes, PrismPlugin, MonacoPlugin],
-    showNotes: persistentState.showNotes,
-    disableLayout: true
-  })
-  reveal.addEventListener('slidechanged', ({ indexh, indexv }) => {
-    persistentState.indexh = indexh
-    persistentState.indexv = indexv
-
-    const openEditor = document.querySelector(
-      '.reveal .present [data-open-editor]'
-    )
-    if (!openEditor) {
-      return
-    }
-    const handlerIndex = /^handlers-(\d)+\.ts$/.exec(
-      openEditor.getAttribute('data-open-editor')
-    )[1]
-    fetch(`http://localhost:7000/switch+${handlerIndex}`)
-      .then(() => console.log('switched to handler', handlerIndex))
-      .catch(console.log)
-  })
-  reveal
-    .initialize({
-      transition: 'none'
-    })
-    .then(() => {
-      new Array(persistentState.indexh).fill(0).forEach(reveal.right)
-      new Array(persistentState.indexv).fill(0).forEach(reveal.down)
-      reveal.configure({
-        transition: 'slide'
-      })
-
-      Prism.highlightAll()
-    })
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-  const slidesWS = new WebSocket('ws://localhost:9001/slides')
-
-  slidesWS.onmessage = (message) => {
-    const slides = JSON.parse(message.data) as Array<RemoteFile>
-    render(slides)
-  }
-
   runExampleClient()
-})
-
-document.addEventListener('keyup', ({ key }) => {
-  if (key === 'q' && reveal) {
-    reveal.configure({
-      showNotes: (persistentState.showNotes = !persistentState.showNotes)
-    })
-  }
-  if (key === 'c') {
-    const c = document.getElementById('example-client')
-    c.style.display = c.style.display === 'none' ? 'flex' : 'none'
-  }
+  console.log("client running")
 })
 
 const runExampleClient = () => {
