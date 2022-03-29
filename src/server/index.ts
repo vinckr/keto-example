@@ -1,11 +1,9 @@
-import slides from './slides'
 import { WebSocketServer } from 'ws'
 import { createServer } from 'http'
 import examples from './examples'
 
 const handlers: { [route: string]: WebSocketServer } = {
-  '/slides': slides,
-  '/examples': examples
+    '/examples': examples
 }
 
 const server = createServer()

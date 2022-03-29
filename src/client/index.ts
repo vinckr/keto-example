@@ -1,11 +1,10 @@
-
 import Prism from 'prismjs'
 
 import './index.css'
 
 document.addEventListener('DOMContentLoaded', () => {
   runExampleClient()
-  console.log("client running")
+  console.log("Client is running.")
 })
 
 const runExampleClient = () => {

@@ -1,5 +1,4 @@
 @import 'reveal.js/dist/reset.css';
-@import 'reveal.js/dist/reveal.css';
 @import 'reveal.js/dist/theme/white.css';
 
 @import 'prismjs/themes/prism.css';
@@ -13,28 +12,6 @@ div[data-open-editor] {
 div[data-open-editor] iframe {
   max-width: unset;
   max-height: unset;
-  width: 100%;
-  height: 100%;
-}
-
-.reveal .slides section {
-  box-sizing: border-box;
-  padding: 10vh 5vw;
-  width: 100%;
-}
-
-.reveal .slides section.full-image {
-  padding: 0;
-}
-
-.reveal .full-image img {
-  max-height: unset;
-  max-width: unset;
-  width: 100%;
-  margin: 0;
-}
-
-#render-reveal-here {
   width: 100%;
   height: 100%;
 }

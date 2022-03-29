@@ -1,18 +1,4 @@
 import Prism from 'prismjs'
-import { Plugin, RevealStatic } from 'reveal.js'
-
-const Plugin: Plugin = {
-  id: 'prism',
-  init: (reveal: RevealStatic): void | Promise<any> => {
-    Array.from(reveal.getRevealElement().querySelectorAll('pre code')).forEach(
-      (block) => {
-        block.className = `language-${block.className}`
-      }
-    )
-  }
-}
-
-export default Plugin
 
 // keto relation tuple syntax highlighting
 const delimiter = {

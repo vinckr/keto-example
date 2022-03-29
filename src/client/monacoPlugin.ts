@@ -1,4 +1,3 @@
-import { Plugin, RevealStatic } from 'reveal.js'
 import { RemoteFile } from '../shared'
 
 let examples: Array<RemoteFile> = []
@@ -49,10 +48,3 @@ const renderEditor = (
   // @ts-ignore
   frame.contentWindow.editorDiffContent = diffContent
 }
-
-const Plugin: Plugin = {
-  id: 'monaco',
-  init: renderEditors
-}
-
-export default Plugin
