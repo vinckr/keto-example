@@ -15,11 +15,11 @@ const checkClient = new checkService.CheckServiceClient(
   grpc.credentials.createInsecure()
 )
 
-const checkIsOwner = (filePath: string, username: string) => {
+const checkCanRead = (filePath: string, username: string) => {
   const checkRequest = new check.CheckRequest()
   checkRequest.setNamespace('files')
   checkRequest.setObject(filePath)
-  checkRequest.setRelation('owner')
+  checkRequest.setRelation('read')
 
   const sub = new acl.Subject()
   sub.setId(username)
@@ -49,9 +49,9 @@ export const handleGet = async (
     return
   }
 
-  if (!(await checkIsOwner(filePath, username))) {
+  if (!(await checkCanRead(filePath, username))) {
     res.statusCode = 403
-    res.end('You are not the owner of the file')
+    res.end('You are not allowed to read the file')
     return
   }
 
@@ -82,12 +82,29 @@ const addOwnershipRelation = (filePath: string, username: string) => {
   sub.setId(username)
   relationTuple.setSubject(sub)
 
-  const tupleDelta = new write.RelationTupleDelta()
-  tupleDelta.setAction(write.RelationTupleDelta.Action.INSERT)
-  tupleDelta.setRelationTuple(relationTuple)
+  const workaroundTuple = new acl.RelationTuple()
+  workaroundTuple.setNamespace('files')
+  workaroundTuple.setObject(filePath)
+  workaroundTuple.setRelation('read')
+
+  const workaroundSubjectSet = new acl.SubjectSet()
+  workaroundSubjectSet.setNamespace('files')
+  workaroundSubjectSet.setObject(filePath)
+  workaroundSubjectSet.setRelation('owner')
+
+  const workaroundSubject = new acl.Subject()
+  workaroundSubject.setSet(workaroundSubjectSet)
+  workaroundTuple.setSubject(workaroundSubject)
 
   const writeRequest = new write.TransactRelationTuplesRequest()
-  writeRequest.addRelationTupleDeltas(tupleDelta)
+
+  ;[relationTuple, workaroundTuple].forEach((tuple) => {
+    const tupleDelta = new write.RelationTupleDelta()
+    tupleDelta.setAction(write.RelationTupleDelta.Action.INSERT)
+    tupleDelta.setRelationTuple(tuple)
+
+    writeRequest.addRelationTupleDeltas(tupleDelta)
+  })
 
   return new Promise<void>((resolve, reject) => {
     writeClient.transactRelationTuples(writeRequest, (error) => {
