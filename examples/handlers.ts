@@ -1,6 +1,13 @@
 import fs from 'fs/promises'
 import { IncomingMessage, ServerResponse } from 'http'
 
+import * as grpc from '@grpc/grpc-js'
+import {
+  acl,
+  write,
+  writeService
+} from '@ory/keto-grpc-client/ory/keto/acl/v1alpha1'
+
 export const handleGet = async (
   req: IncomingMessage,
   res: ServerResponse,
@@ -18,11 +25,54 @@ export const handleGet = async (
     })
 }
 
+const writeClient = new writeService.WriteServiceClient(
+  '127.0.0.1:4467',
+  grpc.credentials.createInsecure()
+)
+
+const addOwnershipRelation = (filePath: string, username: string) => {
+  const relationTuple = new acl.RelationTuple()
+  relationTuple.setNamespace('files')
+  relationTuple.setObject(filePath)
+  relationTuple.setRelation('owner')
+
+  const sub = new acl.Subject()
+  sub.setId(username)
+  relationTuple.setSubject(sub)
+
+  const tupleDelta = new write.RelationTupleDelta()
+  tupleDelta.setAction(write.RelationTupleDelta.Action.INSERT)
+  tupleDelta.setRelationTuple(relationTuple)
+
+  const writeRequest = new write.TransactRelationTuplesRequest()
+  writeRequest.addRelationTupleDeltas(tupleDelta)
+
+  return new Promise<void>((resolve, reject) => {
+    writeClient.transactRelationTuples(writeRequest, (error) => {
+      if (error) {
+        reject(error)
+      } else {
+        resolve()
+      }
+    })
+  })
+}
+
 export const handlePost = async (
   req: IncomingMessage,
   res: ServerResponse,
   filePath: string
 ) => {
+  // assuming this can only be set by ingress/upstream service/...
+  const username = req.headers.authorization
+  if (!username) {
+    res.statusCode = 403
+    res.end('Only for authenticated users.')
+    return
+  }
+
+  await addOwnershipRelation(filePath, username)
+
   return fs
     .open(filePath, 'w', 0o600)
     .then(async (file) => {
