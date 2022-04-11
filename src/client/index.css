@@ -40,7 +40,6 @@ div[data-open-editor] iframe {
 }
 
 #example-client {
-  display: none;
   background-color: rgba(0, 0, 0, 60%);
   width: 100%;
   height: 100%;
