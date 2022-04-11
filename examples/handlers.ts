@@ -5,14 +5,56 @@ import * as grpc from '@grpc/grpc-js'
 import {
   acl,
   write,
-  writeService
+  writeService,
+  check,
+  checkService
 } from '@ory/keto-grpc-client/ory/keto/acl/v1alpha1'
+
+const checkClient = new checkService.CheckServiceClient(
+  '127.0.0.1:4466',
+  grpc.credentials.createInsecure()
+)
+
+const checkIsOwner = (filePath: string, username: string) => {
+  const checkRequest = new check.CheckRequest()
+  checkRequest.setNamespace('files')
+  checkRequest.setObject(filePath)
+  checkRequest.setRelation('owner')
+
+  const sub = new acl.Subject()
+  sub.setId(username)
+  checkRequest.setSubject(sub)
+
+  return new Promise<boolean>((resolve, reject) => {
+    checkClient.check(checkRequest, (error, resp) => {
+      if (error) {
+        reject(error)
+      } else {
+        resolve(resp.getAllowed())
+      }
+    })
+  })
+}
 
 export const handleGet = async (
   req: IncomingMessage,
   res: ServerResponse,
   filePath: string
 ) => {
+  // assuming this can only be set by ingress/upstream service/...
+  const username = req.headers.authorization
+  if (!username) {
+    res.statusCode = 403
+    res.end('Only for authenticated users.')
+    return
+  }
+
+  if (!(await checkIsOwner(filePath, username))) {
+    res.statusCode = 403
+    res.end('You are not the owner of the file')
+    return
+  }
+
   return fs
     .readFile(filePath)
     .then((data) => {
