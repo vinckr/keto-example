@@ -1,22 +1,5 @@
-import Reveal from 'reveal.js'
-import Markdown from 'reveal.js/plugin/markdown/markdown.esm.js'
-import Notes from 'reveal.js/plugin/notes/notes.esm.js'
-import { RemoteFile } from '../shared'
 import Prism from 'prismjs'
-import PrismPlugin from './prismPlugin'
-import MonacoPlugin from './monacoPlugin'
-
 import './index.css'
-
-const persistentState: {
-  indexv: number
-  indexh: number
-  showNotes: boolean
-} = {
-  indexv: 0,
-  indexh: 0,
-  showNotes: true
-}
 
 document.addEventListener('DOMContentLoaded', () => {
   runExampleClient()
