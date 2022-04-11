@@ -7,7 +7,7 @@
     "start": "concurrently npm:start:backend npm:start:client npm:start:example",
     "start:backend": "nodemon --ignore src/client --watch src src/server/index.ts",
     "start:client": "webpack serve",
-    "start:example": "cd examples; ./run.sh"
+    "start:example": "cd handlers; ./run.sh"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.4.2",
